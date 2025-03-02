@@ -6,7 +6,8 @@ Hi,
 Thank you for being interested in out exciting research!
 In this repository you will find all the scripts and most data to generate all Figures in the Paper: "Engineering intrinsically disordered regions (IDRs) for guiding genome navigation" by Jing Liu et al. 2025.
 Scripts for each figure is named by Fig#, # = 1-7. For similar plots showing up several times, one file is prepared for each. This includes abundance results, last subplots in fig.2&3, binding at individual promoters. And for figures in the supplementary materials, figS1-3 has a .mat file for each, others are included in the respective code for the main figures. 
-Mat files / tables are processed sequencing data, necessary annotations for promoters, inititally processed data for sequence analysis from datasets.
+Mat files / tables are processed sequencing data, necessary annotations for promoters, inititally processed data for sequence analysis from datasets.(They are prepared from organiseDataGUI.m & A_GetMeanProfiles.m: prepare .mat files from sequencing results (.out files). Then compare repeats, prepare mean binding profiles for reproducible strains. Then followed by other codes)
+
 What are they?
 - TF : TF names
 - TF_information: a table for all yeast TFs
