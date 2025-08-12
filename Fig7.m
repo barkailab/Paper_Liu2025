@@ -6,13 +6,14 @@ refcolormap = [166 206 226;1 1 1;246 153 153]./255;
 %% include felix strains
 AllTF = load('allTFs.mat');
 DivyaDBD = load('medianSumPromNewAll.mat');
-toadd = find(~ismember(TFinfo.TF,descTF.TF));
+descTF = readtable('descTF.xlsx');
+toadd = find(~ismember(TFdescription.TF,descTF.TF));
 tempH = height(descTF);
 n=0;
 for i = toadd'
     n=n+1;
-    descTF.TF{tempH+n} = TFinfo.TF{i};
-    descTF.DBDname{tempH+n} = TFinfo.DBD{i};
+    descTF.TF{tempH+n} = TFdescription.TF{i};
+    descTF.DBDname{tempH+n} = TFdescription.DBD{i};
 end
 %% get all DBDs
 DBDsumProm = [];
@@ -24,16 +25,21 @@ for i = 1:numel(listDBD)
         DBDsumProm(:,i) = StrainSumProm(:,find(ismember(strains.strain,listDBD{i})));
     end
 end
-DBDsumProm(:,47) = DivyaDBD.medianSumPromNewAll.(TFinfo.dkDBD{25});
+% DBDsumProm(:,47) = DivyaDBD.medianSumPromNewAll.(TFdescription.dkDBD{25});
 %% get all TFs
 toadd = find(~ismember(TFinfo.TF,AllTF.currStrainsFelix));
 listTF =  [AllTF.currStrainsFelix(find(~contains(AllTF.currStrainsFelix,'DBD')));TFinfo.TF(toadd)];
+
 TFsumProm = [];
-for i =1:numel(listTF)
+for i =196:numel(listTF)
     try 
     TFsumProm(:,i)= AllTF.sumPromFelix(:,find(ismember(AllTF.currStrainsFelix,listTF{i})));
     catch
+        if i ==182|i==192
+            TFsumProm(:,i) = DivyaDBD.medianSumPromNewAll.GIS1;
+        else
         TFsumProm(:,i) =  StrainSumProm(:,find(ismember(strains.strain,listTF{i})));
+        end
     end
 end
 %% get hugh and hahn

@@ -243,7 +243,7 @@ drawlist_rp=[];
 drawlist_ref =[];
 drawlist = [];
 clearvars abs_*
-for i = 1:27
+for i = 1:26
     a = find(ismember(strains.strain, TFdescription.FL{i}));
     b = DBDid(i);
     abs_log2{i,11} = 0;

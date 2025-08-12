@@ -1,5 +1,5 @@
 %% prepare 
-load('denovoinfo')
+% load('0724.mat','denovoinfo')
 % get refsel and references
 for i = 1:3
     refsel(i) = min(find(contains(denovoinfo.newname,['Ref',num2str(i)])));
@@ -56,9 +56,10 @@ end
 xticks(1:100:401)
 
 %% select current draw
-curIntAl = {'Fdel','Ldel','FF','LL','FtoL','Fto2L'}; %% figS2AB selects curIntAl 3~6
+curIntAl = {'Fdel','Ldel'}%,'FF','LL'}%,'FtoL','Fto2L'}; %% figS2AB selects curIntAl 3~6
+curIntAl = {'FtoL','Fto2L'};
 drawsel2 = [];
-for k = 1:6
+for k = 1:numel(curIntAl)
     curInt = curIntAl{k};
     sel = find(contains(denovoinfo.newtype,curInt));
      sel = sel(strains.max_corr(denovoinfo.strainid(sel))>0.9);

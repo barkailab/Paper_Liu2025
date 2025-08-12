@@ -221,9 +221,9 @@ ylabel('Reproducibility')
 
 %% Order reproducible denovo IDR - Msn2DBD
 orderClust = [6 5 19 3 13 8 7 11 12 17 1 14 15 9 10 16 2 20 21 18 4];
-goodids = [FIrstBatch.strainid(FIrstBatch.maxcorr>0.9)];
+goodids = [FirstBatch.strainid(FirstBatch.maxcorr>0.9)];
 names = [repmat({' '},1,24),'Msn2','DBD'];
-goodsel =find(FIrstBatch.maxcorr>0.9);
+goodsel =find(FirstBatch.maxcorr>0.9);
 %% calculate in vitromotif binidng
 BStable = BStables.(TF{15}); % 15 is Msn2
 bsSur = 150;
@@ -257,7 +257,7 @@ strains.bindScore(goodids(ordernow)) = bindScore;
 %% heatmap - corr. matrix
 ordernow = orderClust;
 figure
-subplot(1,20,2:18)
+subplot(1,20,2:16)
 imagesc(corr(StrainSumProm(Protype<3, goodids(ordernow)),'rows','pairwise'),[0,1])
 set(gca,'ytick',1:numel(ordernow),'yticklabel',names(ordernow),'xtick',[])
 colormap(gca,brighten(flipud(brewermap(1000,'-Blues')),0.3))
@@ -271,14 +271,8 @@ set(gca,'colormap',[1 1 1;scaffoldcp],'YTick',[])
 axis equal
 xlim([0.5,1.5])  
 xticks([])
-subplot(1,20,19)
-% 'M' get Motif
-imagesc(log2(strains.bindScore(goodids(ordernow))),[0 4])
-colormap(gca,brewermap(1000,'Greens'))
-yticks([])
-colorbar
-xticks([])
-subplot(1,20,20)
+
+subplot(1,20,17)
 % 'O' get OPN
 cur_sp = StrainSumProm(:,goodids(ordernow));
 log_sum = log2(cur_sp+700); % supress noise
@@ -292,6 +286,30 @@ colormap(gca,brewermap(1000,'-RdBu'))
 yticks([])
 colorbar
 xticks([])
+
+subplot(1,20,18)
+% 'M' get Motif
+imagesc(log2(strains.bindScore(goodids(ordernow))),[0 4])
+colormap(gca,brewermap(1000,'Greens'))
+yticks([])
+colorbar
+xticks([])
+
+subplot(1,20,19)
+% 'P' abs. measurement at promoters
+denovoFD = log(strains.meanAbs(goodids,:)./strains.meanAbs(drawlist(15,1),:));
+imagesc(denovoFD([ordernow],2),[-1 1])
+set(gca,'colormap',brewermap(1000,'-RdBu'))
+set(gca,'ytick',[],'yticklabel',FirstBatch.newname([ordernow]))
+yline(0.5:1:24.5,'white')
+
+subplot(1,20,20)
+% Fr. fraction of motif-containing targets
+imagesc(sigmotifYes(goodids(ordernow))',[0.3 1])
+colormap(brewermap(100,'Greens'))
+xticks([])
+yticks([])
+yline([0.5:1:20.5],'white')
 %% top and bottom bar corrMsn2, corr Msn2DBD
 clf
 subplot(20,1,1)
@@ -333,4 +351,3 @@ for i = [aa2int('NQSTGP'),21,22,aa2int(['FYL'])]
     ylim([0.5 numel(ordernow)+0.5])
 end
 exportgraphics(gcf,'Fig2DcorrBind.eps','ContentType','vector')
-%% Figure S2B

@@ -1,4 +1,123 @@
-% fig.S3A
+%% fig.S3A
+TFdescription.TFi = cellfun(@(x) [x(1),lower(x(2:end))],TFdescription.TF,'UniformOutput',false);
+colorblind_rgb = [
+    0.0000 0.4500 0.7000   % dark blue
+    0.8350 0.3690 0.0000   % vermillion
+    0.0000 0.6190 0.4500   % bluish green
+    0.9490 0.8940 0.1250   % yellow
+    0.3500 0.3500 0.3500   % grey
+    0.8000 0.4750 0.6550   % reddish purple
+    0.3660 0.6000 0.8000   % sky blue
+    0.9000 0.6000 0.0000   % orange
+    0.9000 0.6000 0.6000   % pink
+    0.8000 0.6000 0.4000   % light brown
+];
+figure
+tempcmap = [166 207 227; 237 216 61;114 90 193;15 142 204;48 161 72;245 153 153]./255;
+typei= 2;
+    % subplot(1,2,typei)
+    allval = strains.meanAbs(:,typei);
+shiftScore = allval(drawlist(DDid(1:end-1),[31:36]));
+
+ Goodscoremat = shiftScore./allval(drawlist(DDid(1:end-1),2));
+ Goodscoremat(maxcorr(DDid(1:end-1),[31:36])<0.9)=-4;
+[~,idx] = sort(max(Goodscoremat,[],2),'descend');
+GoodxFLmat = corrWT(DDid(1:end-1),[31:36]);
+GoodxFLmat(maxcorr(DDid(1:end-1),[31:36])<0.9)=0;
+% corr. scaffold only
+% Scaffoldid = [501,501,501,501,318,118];
+Scaffoldid = drawlist(DDid(1:end-1),1);
+GoodxScmat=[];
+for i = 1:9
+GoodxScmat(i,:) = corr(StrainSumProm(Protype<3, drawlist(DDid(i),31:36)), StrainSumProm(Protype<3,Scaffoldid(i)));
+GoodxScmat(i,maxcorr(DDid(i),31:36)<0.9)=0;
+
+end
+GoodxFLmat = GoodxScmat;
+hold on
+n=0;
+for i = idx'%[7,5,1,6,3,4,2,8,9]
+    hold on
+    n=n+1;
+    scatter(n*ones(6,1),log(Goodscoremat((i),:)),100*GoodxFLmat((i),:)+1,1:6,'filled', ...
+        'MarkerEdgeColor','#635A71','MarkerFaceAlpha',0.7)
+    colormap(tempcmap)
+
+    caxis([1 6])
+    xlim([0 9])
+
+end
+xticks(1:9)
+xticklabels(TFdescription.TFi(DDid(idx)))
+ylabel('log(mutant/DBD-only promoter binding)')
+title(names{typei})
+  ylim([-1 1])
+c=colorbar;
+c.Ticks = 1+5/12:5/6:6;
+c.TickLabels = allgrammarlist(31:36);
+ scatter(9*ones(2,1),[0.8 1],[50,100],'k', ...
+        'MarkerEdgeColor','#635A71')
+ %% fig S3B
+ %% Fig7 zscores (choose each TF)
+tempcur_sp = StrainSumProm(:,drawlist(DDid(1:end-1),1));
+templog_sum = log2(tempcur_sp+700); % supress noise
+tempzscore= (templog_sum-mean(templog_sum,1,'omitnan'))./std(templog_sum,[],1,'omitnan');
+
+n=0;
+tfracstor=[];
+tfMotifFracByz=[];
+for tfi = 1:numel(DDid)-1
+n=0;
+for thr = 0:0.1:10
+    n=n+1;
+    % get TF targets
+z_logDDFL = tempzscore>thr;
+selTFsig = (z_logDDFL(:,tfi));
+% how many denovo also bind them? check heree!!!
+sel = find(strains.max_corr>0.9&ismember(strains.type,[31:36]));
+cur_sp = StrainSumProm(:,sel);
+
+log_sum = log2(cur_sp+700); % supress noise
+zscore= (log_sum-mean(log_sum,1,'omitnan'))./std(log_sum,[],1,'omitnan');
+
+z_DN_sig = zscore>thr;% DD > threshold
+selDNsig = (sum(z_DN_sig,2)>1); % sel tar in DD
+TF0DNsig = selTFsig.*selDNsig; % common targets
+numTF0DNsig = sum(TF0DNsig(Protype<3,:))./sum(selDNsig(Protype<3)); 
+DN0TFsig = selDNsig.*selTFsig;
+numDN0TFsig = sum(DN0TFsig(Protype<3,:))./sum(selTFsig(Protype<3));
+
+bothcaught= sum(selTFsig(Protype<3).*selDNsig(Protype<3));
+tfracstor{tfi}(n,1) = thr;
+tfracstor{tfi}(n,2) = bothcaught./sum(selTFsig(Protype<3));
+tfracstor{tfi}(n,3) = sum(selTFsig(Protype<3));
+
+% motif fraction
+sigmotifYes = sum(motifYesMat(:,sel).*z_DN_sig(Protype<3,:))./sum(z_DN_sig(Protype<3,:));
+tfMotifFracByz{tfi}(n,:) = sigmotifYes;
+
+end
+end
+%% scatter of lines by each tf
+figure
+
+for i = 1:numel(DDid)-1
+    subplot(2,5,i)
+    hold on
+    fill([0 0 3 3], [0 1 1 0],'g','EdgeColor','none','FaceColor','#cde6c6')
+
+scatter(tfracstor{i}(tfracstor{i}(:,4)>0,1),tfracstor{i}(tfracstor{i}(:,4)>0,2),10,mean(tfMotifFracByz{i}(tfracstor{i}(:,4)>0,:),2),'filled','MarkerFaceAlpha',0.5)
+hold on
+colormap(brewermap(100,'Greens'))
+clim([0 1])
+
+xlabel('zscore')
+ylabel('Fraction')%% old wrong
+title(TFdescription.TF(DDid(i)))
+xlim([0 5.5])
+end
+legend({'Targets threshold','Fraction of native targets'})
+%% fig.S3C
 %% make normprofile of interested strains
 clearvars motifMat
 normProfile = zeros(12157105,1);
@@ -66,7 +185,7 @@ for i= denovoTFid(1:9)'% here you choose the interested TFid for interested DBD-
 end
 exportgraphics(gcf,'invitromotif.eps','ContentType','vector')
 
-%% fig. S3B seqlogo -FL
+%% fig. S3D seqlogo -FL
 figure
 TFn=0;
 for i = denovoTFid(1:9)'
@@ -129,7 +248,7 @@ for i = denovoTFid(1:6)'
     exportgraphics(gcf,[TF{i},'DDWTinvivomotifs.pdf'],'ContentType','vector')
 end
            
-%% fig.S3C OPN binding
+%% fig.S3E OPN binding
 %% strongly bound promoters
 cursel = acol(denovoSid(1:6,1:9));
 cursel = cursel(strains.max_corr(cursel)>0.9);
@@ -191,7 +310,7 @@ for i= 1:3
     hi{i} = movmean(y{i}+e{i},200);
     cumsumSP = [];
 end
-%% plot fig.S3C
+%% plot fig.S3E
 figure
 
 axes('Position',[0.2 0.3 0.6 0.4])
@@ -220,3 +339,59 @@ colorbar
 clim([-3 3])
 xlabel('Promoters ordered by OPN')
 exportgraphics(gcf,'DD_opn_log.eps','ContentType','vector')
+%% Fig. S3G Euclidean distance from unbiased motifs and in-vitro motifs
+tempsel = acol(drawlist(DDid(1:end-1),[31:36]));
+DDselinDK = find(ismember([DK_normP.strainid], tempsel));
+
+mybinedges = 0:0.02:1;
+figure 
+subplot(2,2,1)
+histogram(UnbMCI(DDselinDK),'Normalization','probability','BinEdges',mybinedges,'FaceColor','#a8cedf','EdgeColor','none')
+
+ylabel("Probability")
+title('Denovo-DBD to in-vitro')
+hold on
+DselinDK = find(ismember([DK_normP.strainid], drawlist(DDid(1:end-1),2)));
+subplot(2,2,2)
+histogram([withref{DselinDK}],'normalization','probability','BinEdges',mybinedges,'FaceColor','#a8cedf','EdgeColor','none')
+
+ylabel("Probability")
+title('DBD-only to in-vitro')
+
+subplot(2,2,3)
+DFLselinDK = find(ismember([DK_normP.strainid], drawlist(DDid(1:end-1),1)));
+
+histogram([withref{DFLselinDK}],'Normalization','probability','BinEdges',mybinedges,'FaceColor','#a8cedf','EdgeColor','none')
+
+ylabel("Probability")
+title('FL Euclidean to in-vitro')
+
+% legend({'Denovo-DBD with invitro','DBD with invitro','FL with invitro'})
+xlabel('Euclidean motif distance')
+subplot(2,2,4)
+histogram(cat(2,withother{DDselinDK}),'Normalization','probability','BinEdges',mybinedges,'FaceColor','#349946','FaceAlpha',0.6,'EdgeColor','none')
+
+ylabel("Probability")
+title('Denovo-DBD to other in vitro')
+xlabel('Euclidean motif distance')
+
+%% Fig. S3H: fraction of motif-containing targets
+motifFrScore = MotifTarFrac(drawlist(DDid(1:end-1),[1:2,31:36]));
+figure
+hold on
+% hold on
+for i = 1:9
+    hold on
+
+    scatter(i*ones(8,1),1:8,20+100*adjmaxcorr(DDid(i),[1,2,31:36]),motifFrScore((i),:),'filled','MarkerEdgeColor','#635A71')
+    colormap(brewermap(1000,'Greens'))
+
+    clim([0.6 1])
+    xlim([0 11])
+    ylim([0 9])
+    set(gca,'YDir','reverse')
+    xticks([])
+    yticks([])
+    % pause()
+end
+axis off
